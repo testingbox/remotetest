@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>智能手機知多少？</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js"></script>
 <style>
   body {
     font-family: 'Noto Sans TC', sans-serif;
     text-align: center;
     padding: 20px;
     background: #f0f4f8;
+  }
+  #info {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #555;
   }
   #wheel-container {
     position: relative;
@@ -33,6 +36,10 @@
       #85E3FF 288deg 360deg
     );
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    transform: rotate(0deg);
+    position: absolute;
+    top: 10px;
+    left: 10px;
   }
   .question-box {
     position: absolute;
@@ -44,31 +51,74 @@
     justify-content: center;
     text-align: center;
     font-size: 10px;
+    font-weight: bold;
+    color: #333;
+    word-break: break-word;
+    padding: 5px;
+    background: transparent;
+    transform-origin: center center;
+    transition: box-shadow 0.3s ease;
+  }
+  .highlight {
+    box-shadow: 0 0 12px 4px yellow;
+    background: rgba(255, 255, 0, 0.2);
+    animation: flash 1s infinite alternate;
+  }
+  @keyframes flash {
+    from { box-shadow: 0 0 10px 4px yellow; }
+    to { box-shadow: 0 0 20px 8px orange; }
   }
   #questionBox {
     margin-top: 30px;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 15px;
+    min-height: 60px;
+    border: none;
+    border-radius: 12px;
     background: #ffffff;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
   #startButton {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 12px 24px;
+    font-size: 18px;
     background-color: #4CAF50;
     color: white;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+  }
+  #startButton:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js"></script>
 </head>
 <body>
 
+<div id="info">
+  <p><strong>主辦：</strong>澳門明愛　　<strong>贊助：</strong>社會工作局</p>
+  <p>掌握新生活 - 智能手機應用推廣活動</p>
+  <p>（手機互動遊戲構想）</p>
+</div>
+
 <h2>智能手機知多少？</h2>
 <div id="wheel-container">
-  <div id="wheel"></div>
+  <div id="wheel">
+    <div class="question-box" style="top:30px; left:50px;">手機通訊應用程式有哪些？</div>
+    <div class="question-box" style="top:30px; left:160px;">『我的健康』2.0應用程式作用是甚麼？</div>
+    <div class="question-box" style="top:130px; left:190px;">『一戶通』應用程式作用是甚麼？</div>
+    <div class="question-box" style="top:190px; left:110px;">手機支付應用程式有哪些？</div>
+    <div class="question-box" style="top:130px; left:30px;">WiFi 是甚麼？</div>
+  </div>
 </div>
-<div id="questionBox">按開始！</div>
+<div id="questionBox">按開始轉動輪盤！</div>
 <button id="startButton">開始</button>
 
 <script>
@@ -87,17 +137,57 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// 手機按鈕操作
-document.getElementById('startButton').addEventListener('click', () => {
-  firebase.database().ref('control').set({ action: 'start' });
-});
+// 問題數據
+const questions = [
+  "手機通訊應用程式有哪些？",
+  "『我的健康』2.0應用程式作用是甚麼？",
+  "『一戶通』應用程式作用是甚麼？",
+  "手機支付應用程式有哪些？",
+  "WiFi 是甚麼？"
+];
 
-// 投影端監聽 Firebase
-firebase.database().ref('control').on('value', (snapshot) => {
+const boxes = document.querySelectorAll('.question-box');
+let spinning = false;
+let interval;
+
+// 清除高亮
+function clearHighlights() {
+  boxes.forEach(b => b.classList.remove('highlight'));
+}
+
+// 啟動輪盤
+function startWheel() {
+  if (spinning) return;
+  spinning = true;
+  clearHighlights();
+
+  interval = setInterval(() => {
+    clearHighlights();
+    const randomIndex = Math.floor(Math.random() * boxes.length);
+    boxes[randomIndex].classList.add('highlight');
+  }, 100);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    const finalIndex = Math.floor(Math.random() * boxes.length);
+    clearHighlights();
+    boxes[finalIndex].classList.add('highlight');
+    document.getElementById('questionBox').innerText = questions[finalIndex];
+    spinning = false;
+  }, 2500);
+}
+
+// 搖控功能：監聽 Firebase
+database.ref('control').on('value', (snapshot) => {
   const data = snapshot.val();
   if (data && data.action === 'start') {
-    alert("抽獎開始！");
+    startWheel();
   }
+});
+
+// 手機端按鈕：發送指令
+document.getElementById('startButton').addEventListener('click', () => {
+  database.ref('control').set({ action: 'start' });
 });
 </script>
 
