@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能手機知多少？</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js"></script>
+<style>
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    text-align: center;
+    padding: 20px;
+    background: #f0f4f8;
+  }
+  #wheel-container {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto;
+  }
+  #wheel {
+    width: 300px;
+    height: 300px;
+    border: 10px solid #ccc;
+    border-radius: 50%;
+    background: conic-gradient(
+      #FFDDC1 0deg 72deg,
+      #FFABAB 72deg 144deg,
+      #FFC3A0 144deg 216deg,
+      #D5AAFF 216deg 288deg,
+      #85E3FF 288deg 360deg
+    );
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  .question-box {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10px;
+  }
+  #questionBox {
+    margin-top: 30px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+  #startButton {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h2>智能手機知多少？</h2>
+<div id="wheel-container">
+  <div id="wheel"></div>
+</div>
+<div id="questionBox">按開始！</div>
+<button id="startButton">開始</button>
+
+<script>
+// Firebase 配置
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-auth-domain",
+  databaseURL: "your-database-url",
+  projectId: "your-project-id",
+  storageBucket: "your-storage-bucket",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "your-app-id"
+};
+
+// 初始化 Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// 手機按鈕操作
+document.getElementById('startButton').addEventListener('click', () => {
+  firebase.database().ref('control').set({ action: 'start' });
+});
+
+// 投影端監聽 Firebase
+firebase.database().ref('control').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data && data.action === 'start') {
+    alert("抽獎開始！");
+  }
+});
+</script>
+
+</body>
+</html>
